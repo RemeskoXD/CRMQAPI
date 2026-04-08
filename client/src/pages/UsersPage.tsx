@@ -147,8 +147,8 @@ function UserFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
     e.preventDefault();
     setSaving(true);
     try {
-      const { default: api } = await import('../services/api');
-      await (api as any).post('/users', { ...form, isActive: true });
+      const { api: apiClient } = await import('../services/api');
+      await apiClient.post('/users', { ...form, isActive: true });
       onSaved();
     } catch (err: any) {
       toast.error(err.message || 'Nepodařilo se vytvořit uživatele');

@@ -79,7 +79,7 @@ export function requireRole(...roles: UserRole[]) {
 }
 
 export function generateToken(payload: AuthPayload): string {
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '24h',
+  return jwt.sign(payload as object, JWT_SECRET, {
+    expiresIn: (process.env.JWT_EXPIRES_IN || '24h') as any,
   });
 }

@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { createRepositories } from './repositories/index.js';
 import { createAuthRoutes } from './routes/auth.routes.js';
 import { createUserRoutes } from './routes/users.routes.js';
@@ -58,7 +60,16 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
+// Serve static frontend in production
+if (process.env.NODE_ENV === 'production') {
+  const clientDist = path.resolve(process.cwd(), 'client', 'dist');
+  app.use(express.static(clientDist));
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
+
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 CRMQ API server running on http://localhost:${PORT}`);
   console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
 });

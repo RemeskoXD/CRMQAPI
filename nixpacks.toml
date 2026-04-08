@@ -1,0 +1,20 @@
+# Coolify/Nixpacks configuration
+# Tell Nixpacks to use our Dockerfile instead of auto-detection
+[phases.setup]
+nixPkgs = ["nodejs_22", "npm"]
+
+[phases.install]
+cmds = [
+  "npm ci --include=dev",
+  "cd server && npm ci --include=dev",
+  "cd client && npm ci --include=dev"
+]
+
+[phases.build]
+cmds = [
+  "cd server && npx tsc",
+  "cd client && npm run build"
+]
+
+[start]
+cmd = "node server/dist/index.js"

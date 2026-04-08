@@ -18,7 +18,7 @@ export function createDashboardRoutes(repos: Repositories): Router {
         repos.clients.findAll(),
       ]);
 
-      const stats: Record<string, unknown> = {};
+      const stats: Record<string, any> = {};
 
       if (role === 'root' || role === 'team_leader' || role === 'analyst') {
         stats.totalClients = allClients.length;
