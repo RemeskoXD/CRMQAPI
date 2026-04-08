@@ -60,21 +60,34 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Serve static frontend in production
+// Serve static frontend - try multiple paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-if (process.env.NODE_ENV === 'production') {
-  // __dirname = /app/server/dist → client dist = /app/client/dist
-  const clientDist = path.resolve(__dirname, '..', '..', 'client', 'dist');
-  console.log(`📁 Serving static files from: ${clientDist}`);
-  app.use(express.static(clientDist));
-  app.get('*', (_req, res) => {
-    res.sendFile(path.join(clientDist, 'index.html'));
-  });
-}
+import('fs').then(fs => {
+  const candidates = [
+    path.resolve(__dirname, '..', '..', 'client', 'dist'),
+    path.resolve(process.cwd(), 'client', 'dist'),
+    path.resolve(process.cwd(), '..', 'client', 'dist'),
+    path.resolve('/app', 'client', 'dist'),
+  ];
+
+  for (const dir of candidates) {
+    if (fs.existsSync(dir) && fs.existsSync(path.join(dir, 'index.html'))) {
+      console.log(`📁 Serving frontend from: ${dir}`);
+      app.use(express.static(dir));
+      app.get('*', (_req, res) => {
+        res.sendFile(path.join(dir, 'index.html'));
+      });
+      break;
+    } else {
+      console.log(`📁 Not found: ${dir}`);
+    }
+  }
+});
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 CRMQ API server running on http://localhost:${PORT}`);
   console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`📁 CWD: ${process.cwd()}, __dirname: ${__dirname}`);
 });
