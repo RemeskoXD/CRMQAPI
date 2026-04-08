@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'fs';
 import { createRepositories } from './repositories/index.js';
 import { createAuthRoutes } from './routes/auth.routes.js';
 import { createUserRoutes } from './routes/users.routes.js';
@@ -60,34 +60,25 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Serve static frontend - try multiple paths
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Serve static frontend - find client/dist automatically
+const candidates = [
+  path.resolve(process.cwd(), '..', 'client', 'dist'),
+  path.resolve(process.cwd(), 'client', 'dist'),
+  path.resolve('/app', 'client', 'dist'),
+];
 
-import('fs').then(fs => {
-  const candidates = [
-    path.resolve(__dirname, '..', '..', 'client', 'dist'),
-    path.resolve(process.cwd(), 'client', 'dist'),
-    path.resolve(process.cwd(), '..', 'client', 'dist'),
-    path.resolve('/app', 'client', 'dist'),
-  ];
-
-  for (const dir of candidates) {
-    if (fs.existsSync(dir) && fs.existsSync(path.join(dir, 'index.html'))) {
-      console.log(`📁 Serving frontend from: ${dir}`);
-      app.use(express.static(dir));
-      app.get('*', (_req, res) => {
-        res.sendFile(path.join(dir, 'index.html'));
-      });
-      break;
-    } else {
-      console.log(`📁 Not found: ${dir}`);
-    }
+for (const dir of candidates) {
+  if (fs.existsSync(path.join(dir, 'index.html'))) {
+    console.log(`📁 Serving frontend from: ${dir}`);
+    app.use(express.static(dir));
+    app.get('*', (_req, res) => {
+      res.sendFile(path.join(dir, 'index.html'));
+    });
+    break;
   }
-});
+}
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 CRMQ API server running on http://localhost:${PORT}`);
   console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`📁 CWD: ${process.cwd()}, __dirname: ${__dirname}`);
 });
